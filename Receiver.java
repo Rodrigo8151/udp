@@ -1,58 +1,39 @@
-package simple_udp1;
-
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.util.Scanner;
+import java.net.*;
+import java.io.*;
 
 public class Receiver {
-
-    public Receiver() throws Exception {
-        DatagramSocket socket = new DatagramSocket(2020);
-        System.out.println("Receiver is running on Windows (Port: 2020)...");
-
-        byte[] buffer = new byte[1500]; 
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
-        socket.receive(packet);
-        String received = new String(packet.getData(), 0, packet.getLength()).trim();
-        System.out.println("Received from Fedora: " + received);
-
-        String inverted = new StringBuilder(received).reverse().toString().toLowerCase();
-
-        String result = "";
-        if (inverted.length() > 1) {
-            char first = Character.toUpperCase(inverted.charAt(0));
-            char last = Character.toUpperCase(inverted.charAt(inverted.length() - 1));
-            String middle = inverted.substring(1, inverted.length() - 1);
-            result = first + middle + last;
-        } else {
-            result = inverted.toUpperCase();
-        }
-
-        InetAddress senders_address = packet.getAddress();
-        int senders_port = packet.getPort();
-        byte[] responseBuffer = result.getBytes();
-        
-        DatagramPacket responsePacket = new DatagramPacket(
-            responseBuffer, 
-            responseBuffer.length, 
-            senders_address, 
-            senders_port
-        );
-        
-        socket.send(responsePacket);
-        System.out.println("Sent back to Fedora: " + result);
-        
-        socket.close();
-    }
-
     public static void main(String[] args) {
-        try {
-            new Receiver();
+        int port = 2020;
+        try (DatagramSocket socket = new DatagramSocket(port)) {
+            System.out.println("Receiver is running on Windows (Port: " + port + ")...");
+
+            byte[] buffer = new byte[1024];
+
+            while (true) {
+                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                socket.receive(request);
+
+                String message = new String(request.getData(), 0, request.getLength());
+                System.out.println("Received from Fedora: " + message);
+
+                String reversed = new StringBuilder(message).reverse().toString();
+                if (reversed.length() > 1) {
+                    reversed = reversed.substring(0, 1).toUpperCase() + 
+                               reversed.substring(1, reversed.length() - 1) + 
+                               reversed.substring(reversed.length() - 1).toUpperCase();
+                } else {
+                    reversed = reversed.toUpperCase();
+                }
+
+                byte[] sendData = reversed.getBytes();
+                DatagramPacket response = new DatagramPacket(
+                    sendData, sendData.length, request.getAddress(), request.getPort()
+                );
+                socket.send(response);
+                System.out.println("Sent back to Fedora: " + reversed);
+            }
         } catch (Exception e) {
-            System.err.println("Error en el Receiver:");
-            e.printStackTrace();
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
