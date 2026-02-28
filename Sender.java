@@ -1,52 +1,39 @@
-package simple_udp1;
-
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.net.*;
+import java.io.*;
 import java.util.Scanner;
 
 public class Sender {
-
-    public Sender() throws Exception {
-        DatagramSocket socket = new DatagramSocket();
-        Scanner keyboard = new Scanner(System.in);
-
-        String windowsIP = "192.168.1.33"; 
+    public static void main(String[] args) {
+        // CAMBIA ESTA IP por la de tu Windows (ipconfig)
+        String serverIP = "192.168.1.33"; 
         int port = 2020;
 
-        System.out.println("Sender running on Fedora 43...");
-        System.out.print("Enter your message in lowercase: ");
-        String message = keyboard.nextLine();
-        byte[] buffer = message.getBytes();
+        try (DatagramSocket socket = new DatagramSocket();
+             Scanner scanner = new Scanner(System.in)) {
+            
+            InetAddress address = InetAddress.getByName(serverIP);
 
-        DatagramPacket packet = new DatagramPacket(
-            buffer, 
-            buffer.length, 
-            InetAddress.getByName(windowsIP), 
-            port
-        );
+            System.out.print("Enter your message: ");
+            String message = scanner.nextLine();
 
-        socket.send(packet);
-        System.out.println("Sent to Windows: " + message);
+            byte[] buffer = message.getBytes();
+            DatagramPacket request = new DatagramPacket(buffer, buffer.length, address, port);
+            socket.send(request);
+            System.out.println("Sent to Windows: " + message);
 
-        byte[] responseBuffer = new byte[1500];
-        DatagramPacket receivePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
-        
-        socket.receive(receivePacket);
+            byte[] responseBuffer = new byte[1024];
+            DatagramPacket response = new DatagramPacket(responseBuffer, responseBuffer.length);
+            
+            socket.setSoTimeout(5000); // Espera 5 segundos máximo
+            socket.receive(response);
 
-        String result = new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
-        System.out.println("Received from Windows (Modified): " + result);
+            String modifiedMessage = new String(response.getData(), 0, response.getLength());
+            System.out.println("Received from Windows (Modified): " + modifiedMessage);
 
-        socket.close();
-        keyboard.close();
-    }
-
-    public static void main(String[] args) {
-        try {
-            new Sender();
+        } catch (SocketTimeoutException e) {
+            System.out.println("Error: No response from Windows. Check IP and Firewall.");
         } catch (Exception e) {
-            System.err.println("Error en el Sender:");
-            e.printStackTrace();
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
