@@ -11,8 +11,6 @@ public class Sender {
         DatagramSocket socket = new DatagramSocket();
         Scanner keyboard = new Scanner(System.in);
 
-        // Configuración de destino
-        // IMPORTANTE: Reemplaza con la IP de tu Windows antes de subir a Git
         String windowsIP = "192.168.1.33"; 
         int port = 2020;
 
