@@ -13,7 +13,7 @@ public class Sender {
 
         // Configuración de destino
         // IMPORTANTE: Reemplaza con la IP de tu Windows antes de subir a Git
-        String windowsIP = "IP_DE_TU_WINDOWS"; 
+        String windowsIP = "192.168.1.33"; 
         int port = 2020;
 
         System.out.println("Sender running on Fedora 43...");
@@ -21,7 +21,6 @@ public class Sender {
         String message = keyboard.nextLine();
         byte[] buffer = message.getBytes();
 
-        // Enviar paquete al Receiver
         DatagramPacket packet = new DatagramPacket(
             buffer, 
             buffer.length, 
@@ -32,11 +31,9 @@ public class Sender {
         socket.send(packet);
         System.out.println("Sent to Windows: " + message);
 
-        // Preparar buffer para recibir la respuesta invertida
         byte[] responseBuffer = new byte[1500];
         DatagramPacket receivePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
         
-        // Esperar respuesta del Receiver
         socket.receive(receivePacket);
 
         String result = new String(receivePacket.getData(), 0, receivePacket.getLength()).trim();
